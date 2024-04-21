@@ -75,12 +75,3 @@ class ECIRModel:
         A = ((2 * self.kappa * self.mu_r) / self.sigma**2) * np.log(
             2 * gamma * np.exp((gamma + self.kappa) * maturity / 2) / ((gamma + self.kappa) * (np.exp(gamma * maturity) - 1) + 2 * gamma))
         return np.exp(A - B * initial_rate)
-
-# Example usage
-if __name__ == "__main__":
-    cir = ECIRModel(kappa=0.3, mu_r=0.04, sigma=0.02, r=3, p=0.05, mu=0, gamma=0.01)
-    initial_rate = 0.05
-    dt = 0.01
-    print("Next interest rate:", cir.next_rate(initial_rate, dt))
-    print("Exact bond price:", cir.exact_solution(initial_rate, 1))  # Bond maturity in 1 year
-    print("Transition density:", cir.transition_density(0.06, initial_rate, dt))
