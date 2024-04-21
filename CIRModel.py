@@ -24,7 +24,8 @@ class BasicCIRModel:
         normal_shock = np.random.normal(0, 1)
         drift = self.kappa * (self.mu_r - current_rate) * dt
         diffusion = self.sigma * np.sqrt(max(current_rate, 0)) * np.sqrt(dt) * normal_shock
-        return current_rate + drift + diffusion
+        new_rate = current_rate + drift + diffusion
+        return max(new_rate, 0)  # Ensure non-negativity
 
     def exact_solution(self, initial_rate: float, maturity: float) -> float:
         """
