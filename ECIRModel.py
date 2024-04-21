@@ -36,7 +36,7 @@ class ECIRModel:
         jump = 0
         if nb_jump > 0:
             jump = self.calculate_jump(nb_jump, current_rate, dt, drift, diffusion)
-        return current_rate + drift + diffusion + jump
+        return max(current_rate + drift + diffusion + jump, 0)
 
     def calculate_jump(self, nb_jump: int, current_rate: float, dt: float, drift: float, diffusion: float) -> float:
         """
