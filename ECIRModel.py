@@ -30,14 +30,24 @@ class ECIRModel:
         Simulates the next interest rate using the Euler-Maruyama method with Negative Binomial jumps.
         """
         normal_shock = np.random.normal(0, 1)
-        nb_jump = nbinom.rvs(self.r, 1 - np.exp(-self.p * dt))
+        # make sure self.r > 0 and an integer
+        if not (self.r > 0 and isinstance(self.r, int)):
+            raise ValueError("Parameter 'r' must be a positive integer for the Negative Binomial distribution.")
+   
+        p_success = 1 - np.exp(-self.p * dt)
+        if not (0 < p_success < 1):
+            raise ValueError("Calculated success probability is out of bounds. It must be between 0 and 1.")
+        
+        nb_jump = nbinom.rvs(self.r, p_success)
+        
         drift = self.kappa * (self.mu_r - current_rate) * dt
         diffusion = self.sigma * np.sqrt(max(current_rate, 0)) * np.sqrt(dt) * normal_shock
         jump = 0
         if nb_jump > 0:
             jump = self.calculate_jump(nb_jump, current_rate, dt, drift, diffusion)
+        
         return max(current_rate + drift + diffusion + jump, 0)
-
+        
     def calculate_jump(self, nb_jump: int, current_rate: float, dt: float, drift: float, diffusion: float) -> float:
         """
         Calculates the jump size using a truncated normal distribution to avoid negative rates.
