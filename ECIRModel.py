@@ -17,10 +17,15 @@ class ECIRModel:
         """
         if gamma <= 0:
             raise ValueError("Gamma must be greater than 0 to avoid division by zero.")
+        
+        # Ensure r is a positive integer
+        if not (r > 0 and isinstance(r, int)):
+            raise ValueError("Parameter 'r' must be a positive integer for the Negative Binomial distribution.")
+        
         self.kappa = kappa
         self.mu_r = mu_r
         self.sigma = sigma
-        self.r = r
+        self.r = int(r)
         self.p = p
         self.mu = mu
         self.gamma = gamma
