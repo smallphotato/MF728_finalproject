@@ -33,20 +33,8 @@ class ECIRModel:
         normal_shock = np.random.normal(0, 1)
         drift = self.kappa * (self.mu_r - current_rate) * dt
         diffusion = self.sigma * np.sqrt(max(current_rate, 0)) * np.sqrt(dt) * normal_shock
-        new_rate = current_rate + drift + diffusion
-        return max(new_rate, 0)  # Ensure non-negativity
+        new_rate = max(current_rate + drift + diffusion, 0)
 
-    def next_rate_with_jumps(self, current_rate: float, dt: float) -> float:
-        """
-        Simulates the next interest rate using the Euler-Maruyama method with Negative Binomial jumps.
-        :param current_rate: Current interest rate.
-        :param dt: Time increment.
-        :return: Next interest rate including jumps.
-        """
-        # Standard CIR process simulation
-        new_rate = self.next_rate(current_rate, dt)
-        
-        # Check for the occurrence of a jump
         num_jumps = np.random.negative_binomial(self.r, self.p)
         if num_jumps > 0:
             jump_sizes = np.random.normal(self.mu, self.gamma, num_jumps)
