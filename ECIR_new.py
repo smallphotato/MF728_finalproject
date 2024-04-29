@@ -22,6 +22,31 @@ class ECIRModel:
         self.mu = mu
         self.gamma = gamma
 
+
+    def next_rate(self, current_rate: float, dt: float, with_jumps: bool = False) -> float:
+        """
+        Simulates the next interest rate using the Euler-Maruyama method, optionally including jumps.
+        :param current_rate: Current interest rate.
+        :param dt: Time increment.
+        :param with_jumps: Boolean to include Negative Binomial jumps.
+        :return: Next interest rate.
+        """
+        # Standard simulation using Euler-Maruyama method
+        normal_shock = np.random.normal(0, 1)
+        drift = self.kappa * (self.mu_r - current_rate) * dt
+        diffusion = self.sigma * np.sqrt(max(current_rate, 0)) * np.sqrt(dt) * normal_shock
+        new_rate = current_rate + drift + diffusion
+
+        if with_jumps:
+            # Check for the occurrence of a jump if jumps are included
+            num_jumps = np.random.negative_binomial(self.r, self.p)
+            if num_jumps > 0:
+                jump_sizes = np.random.normal(self.mu, self.gamma, num_jumps)
+                total_jump = np.sum(jump_sizes)
+                new_rate += total_jump
+        
+        return max(new_rate, 0)
+'''
     def next_rate(self, current_rate: float, dt: float) -> float:
         """
         Simulates the next interest rate using the Euler-Maruyama method.
@@ -53,7 +78,7 @@ class ECIRModel:
             new_rate += total_jump
         
         return max(new_rate, 0)  # Ensure non-negativity
-
+'''
     def exact_solution(self, initial_rate: float, maturity: float) -> float:
         """
         Calculates the exact bond price under the CIR model for a zero-coupon bond.
