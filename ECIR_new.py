@@ -107,12 +107,3 @@ class ECIRModel:
         
         return density_sum
 
-
-# Example usage
-if __name__ == "__main__":
-    cir_extended = ECIRModel(kappa=0.3, mu_r=0.04, sigma=0.02, p=0.7, r=5, mu=0.02, gamma=0.01)
-    initial_rate = 0.05
-    dt = 0.01
-    print("Next interest rate without jumps:", cir_extended.next_rate(initial_rate, dt))
-    print("Next interest rate with jumps:", cir_extended.next_rate_with_jumps(initial_rate, dt))
-    print("Exact bond price:", cir_extended.exact_solution(initial_rate, 1))  # Bond maturity in 1 year
