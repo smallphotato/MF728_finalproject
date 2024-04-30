@@ -38,6 +38,19 @@ class ECIRModel:
         new_rate = current_rate + drift + diffusion
 
         if with_jumps:
+            num_jumps = np.random.negative_binomial(self.r, self.p)
+            
+
+            if num_jumps > 0:
+                jump_sizes = np.random.normal(self.mu, self.gamma, num_jumps)
+                signs = np.random.choice([-1, 1], num_jumps, p=[0.1, 0.9])
+                jump_sizes *= signs
+
+                total_jump = np.sum(jump_sizes)
+                new_rate += total_jump
+
+        '''
+        if with_jumps:
             # Check for the occurrence of a jump if jumps are included
             num_jumps = np.random.negative_binomial(self.r, self.p)
             if num_jumps > 0:
@@ -48,6 +61,7 @@ class ECIRModel:
                 # jump_sizes = np.random.normal(self.mu, self.gamma, num_jumps)
                 total_jump = np.sum(jump_sizes)
                 new_rate += total_jump
+        '''
 
 
     
