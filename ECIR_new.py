@@ -108,9 +108,8 @@ class ECIRModel:
 
             # Compute the density components
             normal_density = norm.pdf(rt, loc=mean, scale=np.sqrt(variance))
-            poisson_density = poisson.pmf(n, self.mu * dt)  # Assume mu is rate parameter per unit time
-
-            # Accumulate weighted density
+            poisson_density = poisson.pmf(n, self.mu * dt)  
+            
             density_sum += normal_density * poisson_density
         
         return density_sum
