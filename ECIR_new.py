@@ -78,7 +78,7 @@ class ECIRModel:
         A = ((2 * self.kappa * self.mu_r) / self.sigma**2) * np.log(
             2 * gamma * np.exp((gamma + self.kappa) * maturity / 2) / ((gamma + self.kappa) * (np.exp(gamma * maturity) - 1) + 2 * gamma))
         return np.exp(A - B * initial_rate)
-
+    '''
     def transition_density(self, rt: float, rt_1: float, dt: float, terms_limit: int = 2) -> float:
         """
         Calculate the transition density for rt given rt_1 using an expansion.
@@ -91,6 +91,27 @@ class ECIRModel:
             normal_density = norm.pdf(rt, loc=mean, scale=np.sqrt(variance))
             negative_binomial_density = nbinom.pmf(n, self.r, self.p)
             density_sum += normal_density * negative_binomial_density
+        
+        return density_sum
+        '''
+
+    def transition_density(self, rt: float, rt_1: float, dt: float, terms_limit: int = 10) -> float:
+        """
+        Calculate the transition density for rt given rt_1 using an expansion with Poisson jumps.
+        """
+        density_sum = 0
+        for n in range(terms_limit):
+            # Calculate the increment from the drift and the jumps
+            rate_increment = self.mu * n + self.kappa * (self.mu_r - rt_1) * dt
+            variance = n * (self.gamma**2) + dt * (rt_1 * (self.sigma**2))
+            mean = rt_1 + rate_increment
+
+            # Compute the density components
+            normal_density = norm.pdf(rt, loc=mean, scale=np.sqrt(variance))
+            poisson_density = poisson.pmf(n, self.mu * dt)  # Assume mu is rate parameter per unit time
+
+            # Accumulate weighted density
+            density_sum += normal_density * poisson_density
         
         return density_sum
 
