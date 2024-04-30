@@ -1,3 +1,4 @@
+# the second version of ECIR
 import numpy as np
 
 class ECIRModel:
@@ -22,30 +23,43 @@ class ECIRModel:
         self.mu = mu
         self.gamma = gamma
 
-
-    def next_rate(self, current_rate: float, dt: float, with_jumps: bool = True) -> float:
+    def next_rate(self, current_rate: float, dt: float) -> float:
         """
-        Simulates the next interest rate using the Euler-Maruyama method, optionally including jumps.
+        Simulates the next interest rate using the Euler-Maruyama method.
         :param current_rate: Current interest rate.
         :param dt: Time increment.
-        :param with_jumps: Boolean to include Negative Binomial jumps.
         :return: Next interest rate.
         """
-        # Standard simulation using Euler-Maruyama method
         normal_shock = np.random.normal(0, 1)
         drift = self.kappa * (self.mu_r - current_rate) * dt
         diffusion = self.sigma * np.sqrt(max(current_rate, 0)) * np.sqrt(dt) * normal_shock
-        new_rate = current_rate + drift + diffusion
+        new_rate = max(current_rate + drift + diffusion, 0)
 
-        if with_jumps:
-            # Check for the occurrence of a jump if jumps are included
-            num_jumps = np.random.negative_binomial(self.r, self.p)
-            if num_jumps > 0:
-                jump_sizes = np.random.normal(self.mu, self.gamma, num_jumps)
-                total_jump = np.sum(jump_sizes)
-                new_rate += total_jump
+        num_jumps = np.random.negative_binomial(self.r, self.p)
+        if num_jumps > 0:
+            jump_sizes = np.random.normal(self.mu, self.gamma, num_jumps)
+            total_jump = np.sum(jump_sizes)
+            new_rate += total_jump
         
-        return max(new_rate, 0)
+        return max(new_rate, 0)  # Ensure non-negativity
+
+    def bond_price(self, rt, T, t=0):
+        """Calculates the zero-coupon bond price considering jumps.
+        :param rt: Current interest rate.
+        :param T: Maturity of the bond.
+        :param t: Current time. Default is 0.
+        :return: Price of the bond.
+        """
+        # Assuming that the jump does not affect the bond pricing formula directly
+        # and it only affects the interest rate process.
+        gamma = np.sqrt(self.kappa**2 + 2*self.sigma**2)
+        B = (2 * (np.exp(gamma * (T - t)) - 1)) / \
+            ((gamma + self.kappa) * (np.exp(gamma * (T - t)) - 1) + 2 * gamma)
+        A = ((2 * self.kappa * self.mu_r) / self.sigma**2) * np.log(
+            2 * gamma * np.exp((gamma + self.kappa) * (T - t) / 2) / \
+            ((gamma + self.kappa) * (np.exp(gamma * (T - t)) - 1) + 2 * gamma))
+        price = np.exp(A - B * rt)
+        return price
 
     def exact_solution(self, initial_rate: float, maturity: float) -> float:
         """
@@ -74,13 +88,3 @@ class ECIRModel:
             density_sum += normal_density * negative_binomial_density
         
         return density_sum
-
-
-# Example usage
-if __name__ == "__main__":
-    cir_extended = ECIRModel(kappa=0.3, mu_r=0.04, sigma=0.02, p=0.7, r=5, mu=0.02, gamma=0.01)
-    initial_rate = 0.05
-    dt = 0.01
-    print("Next interest rate without jumps:", cir_extended.next_rate(initial_rate, dt))
-    print("Next interest rate with jumps:", cir_extended.next_rate_with_jumps(initial_rate, dt))
-    print("Exact bond price:", cir_extended.exact_solution(initial_rate, 1))  # Bond maturity in 1 year
