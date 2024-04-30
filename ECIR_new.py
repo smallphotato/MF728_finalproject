@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.stats import norm, poisson
+
 
 class ECIRModel:
     """Extended Cox-Ingersoll-Ross (CIR) model with Negative Binomial jumps for interest rate dynamics."""
