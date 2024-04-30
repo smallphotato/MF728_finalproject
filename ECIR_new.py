@@ -3,22 +3,18 @@ import numpy as np
 class ECIRModel:
     """Extended Cox-Ingersoll-Ross (CIR) model with Negative Binomial jumps for interest rate dynamics."""
     
-    def __init__(self, kappa: float, mu_r: float, sigma: float, p: float, r: int, mu: float, gamma: float):
+    def __init__(self, kappa: float, mu_r: float, sigma: float, mu: float, gamma: float):
         """
         Initializes the extended CIR model with parameters.
         :param kappa: Mean reversion speed.
         :param mu_r: Long-term mean interest rate.
         :param sigma: Volatility of the interest rate.
-        :param p: Probability of success in each Bernoulli trial for the Negative Binomial distribution.
-        :param r: Number of successes until the process is stopped (Negative Binomial parameter).
         :param mu: Mean of the normal distribution for jump sizes.
         :param gamma: Standard deviation of the normal distribution for jump sizes.
         """
         self.kappa = kappa
         self.mu_r = mu_r
         self.sigma = sigma
-        self.p = p
-        self.r = r
         self.mu = mu
         self.gamma = gamma
 
@@ -38,7 +34,7 @@ class ECIRModel:
         new_rate = current_rate + drift + diffusion
 
         if with_jumps:
-            num_jumps = np.random.negative_binomial(self.r, self.p)
+            num_jumps = np.random.poisson(self.mu)
             
 
             if num_jumps > 0:
@@ -47,6 +43,7 @@ class ECIRModel:
                 jump_sizes *= signs
 
                 total_jump = np.sum(jump_sizes)
+
                 new_rate += total_jump
 
         '''

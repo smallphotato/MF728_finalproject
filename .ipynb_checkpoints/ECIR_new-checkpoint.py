@@ -3,22 +3,18 @@ import numpy as np
 class ECIRModel:
     """Extended Cox-Ingersoll-Ross (CIR) model with Negative Binomial jumps for interest rate dynamics."""
     
-    def __init__(self, kappa: float, mu_r: float, sigma: float, p: float, r: int, mu: float, gamma: float):
+    def __init__(self, kappa: float, mu_r: float, sigma: float, mu: float, gamma: float):
         """
         Initializes the extended CIR model with parameters.
         :param kappa: Mean reversion speed.
         :param mu_r: Long-term mean interest rate.
         :param sigma: Volatility of the interest rate.
-        :param p: Probability of success in each Bernoulli trial for the Negative Binomial distribution.
-        :param r: Number of successes until the process is stopped (Negative Binomial parameter).
         :param mu: Mean of the normal distribution for jump sizes.
         :param gamma: Standard deviation of the normal distribution for jump sizes.
         """
         self.kappa = kappa
         self.mu_r = mu_r
         self.sigma = sigma
-        self.p = p
-        self.r = r
         self.mu = mu
         self.gamma = gamma
 
@@ -38,13 +34,34 @@ class ECIRModel:
         new_rate = current_rate + drift + diffusion
 
         if with_jumps:
+            num_jumps = np.random.poisson(self.mu)
+            
+
+            if num_jumps > 0:
+                jump_sizes = np.random.normal(self.mu, self.gamma, num_jumps)
+                signs = np.random.choice([-1, 1], num_jumps, p=[0.1, 0.9])
+                jump_sizes *= signs
+
+                total_jump = np.sum(jump_sizes)
+
+                new_rate += total_jump
+
+        '''
+        if with_jumps:
             # Check for the occurrence of a jump if jumps are included
             num_jumps = np.random.negative_binomial(self.r, self.p)
             if num_jumps > 0:
-                jump_sizes = np.random.normal(self.mu, self.gamma, num_jumps)
+                signs = np.random.choice([-1, 1], num_jumps, p= [0.1, 0.9])
+                jump_sizes *= signs
+                
+                
+                # jump_sizes = np.random.normal(self.mu, self.gamma, num_jumps)
                 total_jump = np.sum(jump_sizes)
                 new_rate += total_jump
-        
+        '''
+
+
+    
         return max(new_rate, 0)
 
     def exact_solution(self, initial_rate: float, maturity: float) -> float:
@@ -75,12 +92,3 @@ class ECIRModel:
         
         return density_sum
 
-
-# Example usage
-if __name__ == "__main__":
-    cir_extended = ECIRModel(kappa=0.3, mu_r=0.04, sigma=0.02, p=0.7, r=5, mu=0.02, gamma=0.01)
-    initial_rate = 0.05
-    dt = 0.01
-    print("Next interest rate without jumps:", cir_extended.next_rate(initial_rate, dt))
-    print("Next interest rate with jumps:", cir_extended.next_rate_with_jumps(initial_rate, dt))
-    print("Exact bond price:", cir_extended.exact_solution(initial_rate, 1))  # Bond maturity in 1 year
